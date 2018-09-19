@@ -5,11 +5,11 @@
 
 Provides ability to archive locally dataset of specific monitoring in [feder](http://github.com/watchdogpolska/feder/).
 
-## Params:
+## Parameters
 
-```--monitoring``` - ID of monitoring
-```--root``` - URL of root of [feder](http://github.com/watchdogpolska/feder/) instance
-```--output-dir``` - Path to directory to store archived data
+* ```--monitoring``` - ID of monitoring
+* ```--root``` - URL of root of [feder](http://github.com/watchdogpolska/feder/) instance
+* ```--output-dir``` - Path to directory to store archived data
 
 
 ## Docker

@@ -1,0 +1,7 @@
+# Git ignored
+node_modules
+out
+.idea
+
+# Additional ignored
+Dockerfile

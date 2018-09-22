@@ -109,7 +109,6 @@ const downloadMonitoring = async (root_url, monitoring_id, output_dir) => {
 
 const main = async () => {
     const argv = minimist(process.argv.slice(2));
-    console.dir(argv);
     const root_url = argv.root || 'https://fedrowanie.siecobywatelska.pl/';
     const monitoring_id = argv.monitoring;
     if (!monitoring_id) {
@@ -130,5 +129,4 @@ const main = async () => {
 main().catch(err => {
     console.error('Something wrong!');
     console.error(err);
-    console.error(err.stack);
 });

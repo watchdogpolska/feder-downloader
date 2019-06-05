@@ -15,6 +15,5 @@ Provides ability to archive locally dataset of specific monitoring in [feder](ht
 ## Docker
 
 ```bash
-docker pull quay.io/watchdogpolska/feder-downloader
+docker run -v $(pwd)/out:/out quay.io/watchdogpolska/feder-downloader nodejs index.js --monitoring 12 --output-dir /out
 ```
-

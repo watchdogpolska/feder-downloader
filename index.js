@@ -9,6 +9,9 @@ const superagent = require('superagent');
 const mkdir = util.promisify(fs.mkdir);
 const stat = util.promisify(fs.stat);
 const writeFile = util.promisify(fs.writeFile);
+const readFile = util.promisify(fs.readFile);
+
+const agent = superagent.agent();
 
 const mkdirNew = async (path, mode) => {
     try {
@@ -20,17 +23,16 @@ const mkdirNew = async (path, mode) => {
 
 const downloadFile = (url, filePath) => {
     console.log(`Fetch file ${url} to ${filePath}`);
-    return superagent
+    return agent
         .get(url)
         .pipe(fs.createWriteStream(filePath));
 };
 
 const fetchAPI = (url) => {
     console.log(`Fetch API ${url}`);
-    return superagent
-        .get(url)
-        .accept('json')
-        .catch(console.error);
+    return agent.get(url).timeout(5000)
+    // .use(throttle.plugin())
+    ;
 };
 
 async function downloadAttachments(row_dir, attachments) {
@@ -51,8 +53,16 @@ async function downloadRecordRow(root_url, row, output_dir) {
     const row_url = `${root_url}api/records/${row.pk}`;
     const row_dir = path.join(output_dir, `${row.pk}`);
     await mkdirNew(row_dir);
-    const row_resp = await fetchAPI(row_url);
-    await writeFile(path.join(row_dir, 'record.json'), JSON.stringify(row_resp.body));
+    const row_file = path.join(row_dir, 'record.json');
+
+    try {
+        await readFile(row_file);
+        console.log(`Skip fetch URL ${row_url}`);
+    } catch (err) {
+        const row_resp = await fetchAPI(row_url);
+        await writeFile(row_file, JSON.stringify(row_resp.body));
+    }
+
     if (row.content_object) {
         if (row.content_object.eml) {
             await downloadFile(row.content_object.eml, path.join(row_dir, 'raw_mail.eml'));
@@ -80,9 +90,18 @@ async function downloadCaseRow(root_url, row, output_dir) {
     const row_url = `${root_url}api/cases/${row.pk}`;
     const row_dir = path.join(output_dir, `${row.pk}`);
     await mkdirNew(row_dir);
-    const row_resp = await fetchAPI(row_url);
-    await writeFile(path.join(row_dir, 'case.json'), JSON.stringify(row_resp.body));
-    await downloadFile(row_resp.body.institution, path.join(row_dir, 'institution.json'));
+    const row_file = path.join(row_dir, 'case.json');
+    let now;
+    try {
+        now = JSON.parse(await readFile(row_file));
+        console.log(`Skip fetch URL ${row_url}`);
+    } catch (err) {
+        const row_resp = await fetchAPI(row_url);
+        await writeFile(row_file, JSON.stringify(row_resp.body));
+        now = row_resp.body;
+    }
+    await writeFile(row_file, JSON.stringify(now));
+    await downloadFile(row.institution, path.join(row_dir, 'institution.json'));
     await downloadRecordList(root_url, row.pk, row_dir);
 }
 
@@ -129,4 +148,5 @@ const main = async () => {
 main().catch(err => {
     console.error('Something wrong!');
     console.error(err);
+    process.exit(1);
 });

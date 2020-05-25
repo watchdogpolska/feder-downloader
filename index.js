@@ -10,8 +10,14 @@ const mkdir = util.promisify(fs.mkdir);
 const stat = util.promisify(fs.stat);
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
+const Throttle = require('superagent-throttle');
 
 const agent = superagent.agent();
+
+const throttle = new Throttle({
+    rate: 10,          // how many requests can be sent every `ratePer`
+    ratePer: 1000,   // number of ms in which `rate` requests may be sent
+});
 
 const mkdirNew = async (path, mode) => {
     try {
@@ -31,8 +37,8 @@ const downloadFile = (url, filePath) => {
 const fetchAPI = (url) => {
     console.log(`Fetch API ${url}`);
     return agent.get(url).timeout(5000)
-    // .use(throttle.plugin())
-    ;
+        .use(throttle.plugin())
+        ;
 };
 
 async function downloadAttachments(row_dir, attachments) {
